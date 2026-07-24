@@ -1,0 +1,64 @@
+@use "../styles/variables" as *;
+@use "../styles/mixins" as *;
+
+.host-notebook {
+  @include card;
+  border-left: 3px solid $color-sheriff;
+
+  h3 {
+    font-size: 14px;
+    color: $color-sheriff;
+    margin-bottom: 12px;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+    color: $color-text-muted;
+  }
+
+  &__current {
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed $color-border;
+  }
+
+  &__current-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $color-text-muted;
+    margin-bottom: 6px;
+  }
+
+  &__history {
+    max-height: 260px;
+    overflow-y: auto;
+    @include scrollbar;
+  }
+
+  &__entry {
+    background: $color-surface-light;
+    border-radius: $radius;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__entry-day {
+    font-weight: 700;
+    color: $color-text;
+    margin-bottom: 2px;
+  }
+
+  &__saved {
+    color: $color-doctor;
+  }
+}

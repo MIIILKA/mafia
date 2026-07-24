@@ -1,0 +1,96 @@
+@use "../styles/variables" as *;
+@use "../styles/mixins" as *;
+
+.home {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+
+  &__title {
+    font-size: 36px;
+    color: $color-accent-light;
+  }
+
+  &__subtitle {
+    color: $color-text-muted;
+    margin-bottom: 28px;
+  }
+
+  &__card {
+    @include card;
+    width: 100%;
+    text-align: left;
+  }
+
+  &__tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    background: $color-surface-light;
+    border-radius: $radius;
+    padding: 4px;
+  }
+
+  &__tab {
+    @include button-base;
+    flex: 1;
+    background: transparent;
+    color: $color-text-muted;
+    padding: 10px;
+
+    &--active {
+      background: $color-accent;
+      color: white;
+    }
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    color: $color-text-muted;
+  }
+
+  &__input {
+    background: $color-surface-light;
+    border: 1px solid $color-border;
+    border-radius: $radius;
+    padding: 12px 14px;
+    color: $color-text;
+    font-size: 15px;
+
+    &:focus {
+      outline: none;
+      border-color: $color-accent;
+    }
+
+    &--code {
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      font-weight: 700;
+    }
+  }
+
+  &__submit {
+    @include button-base;
+    background: $color-accent;
+    color: white;
+    padding: 14px;
+    font-size: 16px;
+
+    &:not(:disabled):hover {
+      background: $color-accent-light;
+    }
+  }
+}

@@ -1,0 +1,45 @@
+@use "../styles/variables" as *;
+@use "../styles/mixins" as *;
+
+.video-grid-wrap {
+  width: 100%;
+  max-width: 1000px;
+  margin-bottom: 20px;
+}
+
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.video-grid-controls {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 12px;
+
+  &__btn {
+    @include button-base;
+    background: $color-surface-light;
+    border: 1px solid $color-border;
+    color: $color-text;
+    font-size: 13px;
+    padding: 8px 14px;
+
+    &:hover {
+      border-color: $color-accent;
+    }
+
+    &--off {
+      background: rgba($color-mafia, 0.15);
+      border-color: rgba($color-mafia, 0.5);
+      color: #ff8a80;
+    }
+  }
+
+  &__error {
+    font-size: 13px;
+    color: $color-text-muted;
+  }
+}

@@ -1,0 +1,27 @@
+@use "../styles/variables" as *;
+
+.timer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  padding: 8px 14px;
+  border-radius: $radius;
+  background: $color-surface-light;
+  border: 1px solid $color-border;
+
+  &__value {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-size: 18px;
+  }
+
+  &--low {
+    background: rgba($color-mafia, 0.2);
+    border-color: rgba($color-mafia, 0.6);
+
+    .timer__value {
+      color: #ff8a80;
+    }
+  }
+}

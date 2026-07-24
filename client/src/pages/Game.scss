@@ -1,0 +1,147 @@
+@use "../styles/variables" as *;
+@use "../styles/mixins" as *;
+
+.game {
+  width: 100%;
+  max-width: 1000px;
+
+  &__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  &__phase {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__phase-label {
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  &__day {
+    color: $color-text-muted;
+    font-size: 13px;
+  }
+
+  &__role-banner {
+    @include card;
+    padding: 12px 18px;
+    margin-bottom: 16px;
+    border-left: 4px solid $color-citizen;
+
+    &--mafia {
+      border-left-color: $color-mafia;
+    }
+    &--don {
+      border-left-color: #7a1f2b;
+    }
+    &--doctor {
+      border-left-color: $color-doctor;
+    }
+    &--sheriff {
+      border-left-color: $color-sheriff;
+    }
+    &--host {
+      border-left-color: $color-sheriff;
+      background: rgba($color-sheriff, 0.08);
+    }
+  }
+
+  &__dead-tag {
+    color: $color-mafia;
+  }
+
+  &__sheriff-result {
+    @include card;
+    padding: 12px 18px;
+    margin-bottom: 16px;
+    border-left: 4px solid $color-sheriff;
+  }
+
+  &__body {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 20px;
+
+    @media (max-width: 800px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__info-box {
+    @include card;
+    color: $color-text-muted;
+    text-align: center;
+
+    &--ended {
+      color: $color-text;
+      font-size: 18px;
+      font-weight: 700;
+    }
+  }
+
+  &__players,
+  &__log {
+    @include card;
+
+    h3 {
+      font-size: 14px;
+      color: $color-text-muted;
+      margin-bottom: 12px;
+    }
+  }
+
+  &__log ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+    font-size: 13px;
+    color: $color-text-muted;
+    @include scrollbar;
+  }
+
+  &__chat {
+    min-height: 400px;
+
+    @media (max-width: 800px) {
+      min-height: 300px;
+    }
+  }
+}
+
+.action-panel {
+  @include card;
+
+  h3 {
+    font-size: 15px;
+    margin-bottom: 14px;
+  }
+
+  &__confirm {
+    @include button-base;
+    width: 100%;
+    margin-top: 16px;
+    background: $color-accent;
+    color: white;
+    padding: 12px;
+
+    &:not(:disabled):hover {
+      background: $color-accent-light;
+    }
+  }
+}

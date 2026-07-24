@@ -1,0 +1,38 @@
+@use "variables" as *;
+
+@mixin card {
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  padding: 24px;
+}
+
+@mixin button-base {
+  font-family: $font-main;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: $radius;
+  padding: 12px 20px;
+  border: none;
+  cursor: pointer;
+  transition: transform $transition, background $transition, opacity $transition;
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+@mixin scrollbar {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: $color-border;
+    border-radius: 3px;
+  }
+}

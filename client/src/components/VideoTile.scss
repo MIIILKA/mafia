@@ -1,0 +1,195 @@
+@use "../styles/variables" as *;
+
+.video-tile {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: #000;
+  border-radius: $radius;
+  overflow: hidden;
+  border: 1px solid $color-border;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  transition: border-color $transition, transform $transition;
+
+  &:hover {
+    border-color: rgba($color-accent, 0.5);
+  }
+
+  &__video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &__placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(160deg, $color-surface-light, $color-surface);
+    color: $color-text-muted;
+    font-size: 32px;
+    font-weight: 700;
+  }
+
+  &__label {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+    font-size: 12px;
+    z-index: 2;
+  }
+
+  &__name {
+    font-weight: 600;
+    color: $color-text;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__tag {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $color-text-muted;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 4px;
+    padding: 1px 5px;
+    flex-shrink: 0;
+
+    &--host {
+      color: $color-sheriff;
+      border-color: rgba($color-sheriff, 0.5);
+    }
+  }
+
+  &__mic-off {
+    margin-left: auto;
+    font-size: 13px;
+  }
+
+  &--eliminated {
+    .video-tile__video,
+    .video-tile__placeholder {
+      filter: grayscale(1) brightness(0.4);
+    }
+  }
+
+  &__overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+
+    &--killed {
+      background: rgba(60, 0, 0, 0.4);
+    }
+    &--banished {
+      background: rgba(20, 20, 30, 0.55);
+    }
+  }
+
+  &__overlay-text {
+    font-family: $font-title;
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 4px 14px;
+    transform: rotate(-4deg);
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+
+    .video-tile__overlay--killed & {
+      color: #ff5449;
+      border: 2px solid #ff5449;
+    }
+    .video-tile__overlay--banished & {
+      color: #c9c9d6;
+      border: 2px solid #c9c9d6;
+    }
+  }
+
+  &__reconnecting {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.55);
+    color: $color-text-muted;
+    font-size: 12px;
+    z-index: 1;
+  }
+
+  &__host-panel {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 3;
+  }
+
+  &__host-toggle {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(0, 0, 0, 0.55);
+    color: $color-text;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    transition: background $transition;
+
+    &:hover {
+      background: rgba($color-accent, 0.7);
+    }
+  }
+
+  &__host-menu {
+    position: absolute;
+    top: 32px;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    min-width: 190px;
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: $radius;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+
+    button {
+      background: none;
+      border: none;
+      color: $color-text;
+      text-align: left;
+      padding: 9px 12px;
+      font-size: 12.5px;
+      cursor: pointer;
+      transition: background $transition;
+
+      &:hover {
+        background: $color-surface-light;
+      }
+    }
+  }
+
+  &__host-menu-danger {
+    color: #ff8a80;
+  }
+
+  &__host-menu-divider {
+    height: 1px;
+    background: $color-border;
+    margin: 2px 0;
+  }
+}
