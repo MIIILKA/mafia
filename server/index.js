@@ -5,15 +5,15 @@ import { Server } from "socket.io";
 import { GameManager } from "./game/gameManager.js";
 
 const PORT = process.env.PORT || 4000;
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:5173";
-
+const CLIENT_ORIGIN = "*";
 const app = express();
-app.use(cors({ origin: CLIENT_ORIGIN }));
+app.use(cors({ origin: "*" }));
+
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: CLIENT_ORIGIN, methods: ["GET", "POST"] }
+  cors: { origin: "*", methods: ["GET", "POST"] },
 });
 
 const game = new GameManager(io);
