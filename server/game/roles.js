@@ -1,23 +1,25 @@
 // Визначає склад ролей залежно від кількості гравців.
-// Проста, збалансована формула для класичної "Мафії".
-// Дон мафії з'являється тільки коли в мафії 2+ гравці (тоді один з них стає доном).
 export function buildRoleDeck(playerCount) {
   if (playerCount < 4) {
     throw new Error("Потрібно щонайменше 4 гравці");
   }
 
-  const mafiaCount = Math.max(1, Math.floor(playerCount / 4));
-  const hasDon = mafiaCount >= 2;
+  // Якщо гравців 7 або більше — 2 мафіозі (Дон + Мафія), Шериф, Лікар, решта — Мирні
+  if (playerCount >= 7) {
+    const deck = ["don", "mafia", "sheriff", "doctor"];
+
+    while (deck.length < playerCount) {
+      deck.push("citizen");
+    }
+
+    return shuffle(deck);
+  }
+
+  // Для малих компаній (4–6 гравців) замість звичайної мафії видаємо Дона
   const hasDoctor = playerCount >= 5;
   const hasSheriff = playerCount >= 6;
 
-  const deck = [];
-  let regularMafiaCount = mafiaCount;
-  if (hasDon) {
-    deck.push("don");
-    regularMafiaCount -= 1;
-  }
-  for (let i = 0; i < regularMafiaCount; i++) deck.push("mafia");
+  const deck = ["don"]; // Дон замість звичайної мафії
   if (hasDoctor) deck.push("doctor");
   if (hasSheriff) deck.push("sheriff");
 

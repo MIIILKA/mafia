@@ -196,11 +196,25 @@ export class GameManager {
     if (room.hostId !== requesterId) throw new Error("Тільки ведучий може почати гру");
 
     const participants = this.gamePlayers(room);
-    if (participants.length < 4) throw new Error("Потрібно щонайменше 4 гравці (без ведучого)");
 
-    const deck = buildRoleDeck(participants.length);
+    // 🟢 Мінімальна кількість гравців: 7 (без ведучого)
+    if (participants.length < 7) {
+      throw new Error("Для гри зі спецролями (Дон, Мафія, Шериф, Лікар, 3 Мирні) потрібно щонайменше 7 гравців!");
+    }
+
+    // 🔴 2 Мафії (Дон + 1 Мафія), 🟢 5 Мирних (Шериф + Лікар + 3 Citizen)
+    let roles = ["don", "mafia", "sheriff", "doctor", "citizen", "citizen", "citizen"];
+
+    // Якщо гравців більше 7 (наприклад 8, 9 і т.д.), додаємо звичайних мирних жителів
+    while (roles.length < participants.length) {
+      roles.push("citizen");
+    }
+
+    // Перемішуємо ролі
+    const shuffledRoles = roles.sort(() => Math.random() - 0.5);
+
     participants.forEach((p, i) => {
-      p.role = deck[i];
+      p.role = shuffledRoles[i];
       p.status = STATUS.ALIVE;
       p.isMafiaLeader = false;
     });
@@ -219,7 +233,6 @@ export class GameManager {
 
     this.enterDiscussion(room);
   }
-
   // ---------- Ніч: керується ведучим покроково ----------
 
   enterNight(room) {
