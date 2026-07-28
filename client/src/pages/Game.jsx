@@ -1,3 +1,5 @@
+// Game.jsx
+
 import { useEffect, useState } from "react";
 import PlayerList from "../components/PlayerList.jsx";
 import Chat from "../components/Chat.jsx";
@@ -74,10 +76,10 @@ export default function Game({
                     <span className="game__phase-label">{PHASE_LABEL[phase] || phase}</span>
                     <span className="game__day">День {room?.dayNumber}</span>
                 </div>
-                <Timer endsAt={room?.timerEndsAt} />
+                <Timer endsAt={room?.timerEndsAt} isPaused={room?.isPaused} />
             </div>
 
-            {/* Баннер спікера (кнопка Завершити промову) */}
+            {/* Баннер спікера */}
             {!isHost && isMyTurnToSpeak && phase !== "night" && phase !== "ended" && (
                 <div style={{ padding: "12px", background: "#2b6cb0", color: "#fff", borderRadius: "8px", marginBottom: "15px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span>🎙 <strong>Ваш час виступати!</strong> Говоріть у мікрофон.</span>
@@ -123,6 +125,36 @@ export default function Game({
                             </>
                         )}
 
+                        {(phase === "discussion" || phase === "speeches" || phase === "voting") && (
+                            <>
+                                {room?.isPaused ? (
+                                    <button
+                                        type="button"
+                                        style={{ background: "#38a169", padding: "6px 12px", fontSize: "0.85rem", color: "#fff" }}
+                                        onClick={() => socket?.emit("host-resume-timer", { code: room?.code })}
+                                    >
+                                        ▶️ Відновити
+                                    </button>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        style={{ background: "#dd6b20", padding: "6px 12px", fontSize: "0.85rem", color: "#fff" }}
+                                        onClick={() => socket?.emit("host-pause-timer", { code: room?.code })}
+                                    >
+                                        ⏸ Пауза
+                                    </button>
+                                )}
+
+                                <button
+                                    type="button"
+                                    style={{ background: "#3182ce", padding: "6px 12px", fontSize: "0.85rem", color: "#fff" }}
+                                    onClick={() => socket?.emit("host-add-time", { code: room?.code, seconds: 30 })}
+                                >
+                                    ⏳ +30 сек
+                                </button>
+                            </>
+                        )}
+
                         {phase === "speeches" && (
                             <button
                                 type="button"
@@ -130,7 +162,7 @@ export default function Game({
                                 style={{ padding: "6px 12px", fontSize: "0.85rem", background: "#3182ce" }}
                                 onClick={() => socket?.emit("pass-speech", { code: room?.code })}
                             >
-                                🎙 Передати слово наступному
+                                🎙 Наступний
                             </button>
                         )}
 
@@ -163,7 +195,7 @@ export default function Game({
                                     style={{ padding: "6px 12px", fontSize: "0.85rem", background: "#718096" }}
                                     onClick={() => socket?.emit("skip-voting", { code: room?.code })}
                                 >
-                                    ⏩ Пропустити голосування
+                                    ⏩ Пропустити
                                 </button>
                                 <button
                                     type="button"
@@ -171,7 +203,7 @@ export default function Game({
                                     style={{ padding: "6px 12px", fontSize: "0.85rem", background: "#805ad5" }}
                                     onClick={() => onSetPhase("night")}
                                 >
-                                    🌙 Завершити голосування та оголосити ніч
+                                    🌙 Ніч
                                 </button>
                             </>
                         )}

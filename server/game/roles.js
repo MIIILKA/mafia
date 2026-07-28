@@ -1,7 +1,9 @@
+//roles.js
+
 // Визначає склад ролей залежно від кількості гравців.
 export function buildRoleDeck(playerCount) {
-  if (playerCount < 4) {
-    throw new Error("Потрібно щонайменше 4 гравці");
+  if (playerCount < 5) {
+    throw new Error("Потрібно щонайменше 5 гравців для початку гри");
   }
 
   // Якщо гравців 7 або більше — 2 мафіозі (Дон + Мафія), Шериф, Лікар, решта — Мирні
@@ -15,7 +17,7 @@ export function buildRoleDeck(playerCount) {
     return shuffle(deck);
   }
 
-  // Для малих компаній (4–6 гравців) замість звичайної мафії видаємо Дона
+  // Для малих компаній (5–6 гравців) замість звичайної мафії видаємо Дона
   const hasDoctor = playerCount >= 5;
   const hasSheriff = playerCount >= 6;
 

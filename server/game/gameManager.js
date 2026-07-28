@@ -1,3 +1,5 @@
+// GameManager.js
+
 import { customAlphabet } from "nanoid";
 import { buildRoleDeck, ROLE_INFO, MAFIA_TEAM_ROLES } from "./roles.js";
 
@@ -18,7 +20,7 @@ export const STATUS = {
   BANISHED: "banished" // вигнаний голосуванням вдень (або вручну ведучим)
 };
 
-const DISCUSSION_SECONDS = 20;
+const DISCUSSION_SECONDS = 60;
 const SPEECH_SECONDS = 30;
 const VOTING_SECONDS = 30;
 const RECONNECT_GRACE_MS = 60_000;
@@ -55,7 +57,9 @@ export class GameManager {
       log: [],
       nightHistory: [], // блокнотик ведучого
       timer: null,
-      timerEndsAt: null
+      timerEndsAt: null,
+      isPaused: false,
+      remainingSeconds: null
     };
 
     this.rooms.set(code, room);
@@ -196,25 +200,11 @@ export class GameManager {
     if (room.hostId !== requesterId) throw new Error("Тільки ведучий може почати гру");
 
     const participants = this.gamePlayers(room);
+    if (participants.length < 5) throw new Error("Потрібно щонайменше 5 гравців (без ведучого)");
 
-    // 🟢 Мінімальна кількість гравців: 7 (без ведучого)
-    if (participants.length < 7) {
-      throw new Error("Для гри зі спецролями (Дон, Мафія, Шериф, Лікар, 3 Мирні) потрібно щонайменше 7 гравців!");
-    }
-
-    // 🔴 2 Мафії (Дон + 1 Мафія), 🟢 5 Мирних (Шериф + Лікар + 3 Citizen)
-    let roles = ["don", "mafia", "sheriff", "doctor", "citizen", "citizen", "citizen"];
-
-    // Якщо гравців більше 7 (наприклад 8, 9 і т.д.), додаємо звичайних мирних жителів
-    while (roles.length < participants.length) {
-      roles.push("citizen");
-    }
-
-    // Перемішуємо ролі
-    const shuffledRoles = roles.sort(() => Math.random() - 0.5);
-
+    const deck = buildRoleDeck(participants.length);
     participants.forEach((p, i) => {
-      p.role = shuffledRoles[i];
+      p.role = deck[i];
       p.status = STATUS.ALIVE;
       p.isMafiaLeader = false;
     });
@@ -233,6 +223,7 @@ export class GameManager {
 
     this.enterDiscussion(room);
   }
+
   // ---------- Ніч: керується ведучим покроково ----------
 
   enterNight(room) {
@@ -241,7 +232,6 @@ export class GameManager {
     room.nightStep = "sleep";
     room.nightActiveIds = [];
 
-    // Записуємо нову ніч в історію блокнота
     room.nightHistory.push({
       day: room.dayNumber,
       mafiaTargetName: null,
@@ -380,6 +370,7 @@ export class GameManager {
 
   enterDiscussion(room) {
     room.phase = PHASE.DISCUSSION;
+    room.isPaused = false;
     room.log.push(`День ${room.dayNumber}. Загальне обговорення.`);
     this.setTimer(room, DISCUSSION_SECONDS, () => this.enterSpeeches(room));
     this.broadcastState(room);
@@ -387,6 +378,7 @@ export class GameManager {
 
   enterSpeeches(room) {
     room.phase = PHASE.SPEECHES;
+    room.isPaused = false;
     room.speakerQueue = room.seatOrder.filter((id) => {
       const p = room.players.get(id);
       return p && this.isPlayerAlive(p);
@@ -420,7 +412,6 @@ export class GameManager {
   }
 
   enterVoting(room) {
-    // В День 1 за правилами немає вигнання під час голосування
     if (room.dayNumber === 1) {
       room.log.push("День 1: Голосування пропущено (перший день без вибування).");
       room.dayNumber += 1;
@@ -429,6 +420,7 @@ export class GameManager {
     }
 
     room.phase = PHASE.VOTING;
+    room.isPaused = false;
     room.currentSpeakerId = null;
     room.votes = {};
     room.log.push("Голосування розпочалось.");
@@ -501,6 +493,57 @@ export class GameManager {
       return true;
     }
     return false;
+  }
+
+  // ---------- Керування таймером (Пауза / Час) ----------
+
+  pauseTimer(room, requesterId) {
+    if (room.hostId !== requesterId) throw new Error("Лише ведучий може це робити");
+    if (room.isPaused || !room.timerEndsAt) return;
+
+    room.remainingSeconds = Math.max(0, Math.ceil((room.timerEndsAt - Date.now()) / 1000));
+    this.clearTimer(room);
+    room.isPaused = true;
+    this.broadcastState(room);
+  }
+
+  resumeTimer(room, requesterId) {
+    if (room.hostId !== requesterId) throw new Error("Лише ведучий може це робити");
+    if (!room.isPaused) return;
+
+    room.isPaused = false;
+    const secondsLeft = room.remainingSeconds || 30;
+
+    if (room.phase === PHASE.DISCUSSION) {
+      this.setTimer(room, secondsLeft, () => this.enterSpeeches(room));
+    } else if (room.phase === PHASE.SPEECHES) {
+      this.setTimer(room, secondsLeft, () => this.advanceSpeech(room));
+    } else if (room.phase === PHASE.VOTING) {
+      this.setTimer(room, secondsLeft, () => this.resolveVoting(room));
+    }
+
+    this.broadcastState(room);
+  }
+
+  addDiscussionTime(room, requesterId, extraSeconds = 30) {
+    if (room.hostId !== requesterId) throw new Error("Лише ведучий може це робити");
+
+    const currentRemaining = room.timerEndsAt ? Math.max(0, Math.ceil((room.timerEndsAt - Date.now()) / 1000)) : 0;
+    const newSeconds = (room.isPaused ? (room.remainingSeconds || 0) : currentRemaining) + extraSeconds;
+
+    if (room.isPaused) {
+      room.remainingSeconds = newSeconds;
+    } else {
+      if (room.phase === PHASE.DISCUSSION) {
+        this.setTimer(room, newSeconds, () => this.enterSpeeches(room));
+      } else if (room.phase === PHASE.SPEECHES) {
+        this.setTimer(room, newSeconds, () => this.advanceSpeech(room));
+      } else if (room.phase === PHASE.VOTING) {
+        this.setTimer(room, newSeconds, () => this.resolveVoting(room));
+      }
+    }
+
+    this.broadcastState(room);
   }
 
   // ---------- Дії гравців уночі ----------
@@ -681,7 +724,7 @@ export class GameManager {
     if (room.phase === PHASE.NIGHT) {
       isNightActive = Boolean(viewer && room.nightActiveIds.includes(viewer.id));
       if (viewer && viewer.isHost) {
-        nightVisibleIds = null; // Ведучий бачить усіх
+        nightVisibleIds = null;
       } else if (isNightActive) {
         nightVisibleIds = room.nightActiveIds;
       } else {
@@ -695,6 +738,7 @@ export class GameManager {
       dayNumber: room.dayNumber,
       nightStep: room.nightStep,
       currentSpeakerId: room.currentSpeakerId,
+      isPaused: Boolean(room.isPaused),
       players,
       you: viewer
           ? {
@@ -709,7 +753,7 @@ export class GameManager {
           }
           : null,
       log: room.log.slice(-30),
-      timerEndsAt: room.timerEndsAt,
+      timerEndsAt: room.isPaused ? Date.now() + (room.remainingSeconds || 0) * 1000 : room.timerEndsAt,
       roleInfo: ROLE_INFO
     };
   }

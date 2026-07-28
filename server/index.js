@@ -150,7 +150,21 @@ io.on("connection", (socket) => {
     if (!room) return;
     game.addChatMessage(room, socket.id, text);
   });
+// У місці, де підключені сокет-події:
+  socket.on("host-pause-timer", ({ code }) => {
+    const room = gameManager.getRoom(code);
+    if (room) gameManager.pauseTimer(room, socket.id);
+  });
 
+  socket.on("host-resume-timer", ({ code }) => {
+    const room = gameManager.getRoom(code);
+    if (room) gameManager.resumeTimer(room, socket.id);
+  });
+
+  socket.on("host-add-time", ({ code, seconds }) => {
+    const room = gameManager.getRoom(code);
+    if (room) gameManager.addDiscussionTime(room, socket.id, seconds || 30);
+  });
   socket.on("host-set-status", ({ code, targetId, status }, cb) => {
     try {
       const cleanCode = code ? code.toUpperCase() : "";
