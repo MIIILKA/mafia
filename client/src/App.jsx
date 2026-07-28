@@ -33,6 +33,14 @@ export default function App() {
     forceMuteCam
   } = useWebRTC(socket, playerIds, room?.you?.id, Boolean(room));
 
+  // Автоматично пригнічуємо мікрофон/камеру, коли гравець "спить" вночі
+  useEffect(() => {
+    if (room?.phase === "night" && room?.you && !room.you.isHost && !room.you.isNightActive) {
+      forceMuteMic();
+      forceMuteCam();
+    }
+  }, [room?.phase, room?.nightStep, room?.you?.isNightActive]);
+
   useEffect(() => {
     function handleRoomState(state) {
       setRoom(state);
@@ -111,9 +119,25 @@ export default function App() {
     });
   }
 
+  function handleLeave() {
+    if (!room) return;
+    socket.emit("leave-room", { code: room.code }, () => {
+      setRoom(null);
+      setMessages([]);
+      clearSavedRoomCode();
+    });
+  }
+
   function handleStart() {
     setError("");
     socket.emit("start-game", { code: room.code }, (res) => {
+      if (res && !res.ok) setError(res.error);
+    });
+  }
+
+  function handleHostAdvanceNight(step) {
+    if (!room) return;
+    socket.emit("host-advance-night", { code: room.code, step }, (res) => {
       if (res && !res.ok) setError(res.error);
     });
   }
@@ -143,43 +167,46 @@ export default function App() {
   }
 
   return (
-    <div className="app-shell">
-      {!room && <Home onCreate={handleCreate} onJoin={handleJoin} error={error || kickedNotice} />}
+      <div className="app-shell">
+        {!room && <Home onCreate={handleCreate} onJoin={handleJoin} error={error || kickedNotice} />}
 
-      {room && (
-        <VideoGrid
-          players={room.players}
-          youId={room.you?.id}
-          isHostViewer={Boolean(room.you?.isHost)}
-          localStream={localStream}
-          remoteStreams={remoteStreams}
-          showStatusOverlay={room.phase !== "lobby"}
-          mediaError={mediaError}
-          micOn={micOn}
-          camOn={camOn}
-          onToggleMic={toggleMic}
-          onToggleCam={toggleCam}
-          onHostSetStatus={handleHostSetStatus}
-          onHostKick={handleHostKick}
-          onHostMediaControl={handleHostMediaControl}
-        />
-      )}
+        {room && (
+            <VideoGrid
+                players={room.players}
+                youId={room.you?.id}
+                isHostViewer={Boolean(room.you?.isHost)}
+                nightVisibleIds={room.you?.nightVisibleIds}
+                phase={room.phase}
+                localStream={localStream}
+                remoteStreams={remoteStreams}
+                showStatusOverlay={room.phase !== "lobby"}
+                mediaError={mediaError}
+                micOn={micOn}
+                camOn={camOn}
+                onToggleMic={toggleMic}
+                onToggleCam={toggleCam}
+                onHostSetStatus={handleHostSetStatus}
+                onHostKick={handleHostKick}
+                onHostMediaControl={handleHostMediaControl}
+            />
+        )}
 
-      {room && room.phase === "lobby" && (
-        <Lobby room={room} onStart={handleStart} error={error} />
-      )}
-      {room && room.phase !== "lobby" && (
-        <Game
-          room={room}
-          messages={messages}
-          sheriffResult={sheriffResult}
-          donResult={donResult}
-          hostNotebook={hostNotebook}
-          onNightAction={handleNightAction}
-          onVote={handleVote}
-          onSendMessage={handleSendMessage}
-        />
-      )}
-    </div>
+        {room && room.phase === "lobby" && (
+            <Lobby room={room} onStart={handleStart} onLeave={handleLeave} error={error} />
+        )}
+        {room && room.phase !== "lobby" && (
+            <Game
+                room={room}
+                messages={messages}
+                sheriffResult={sheriffResult}
+                donResult={donResult}
+                hostNotebook={hostNotebook}
+                onNightAction={handleNightAction}
+                onAdvanceNight={handleHostAdvanceNight}
+                onVote={handleVote}
+                onSendMessage={handleSendMessage}
+            />
+        )}
+      </div>
   );
 }

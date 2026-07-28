@@ -5,7 +5,6 @@ import { Server } from "socket.io";
 import { GameManager } from "./game/gameManager.js";
 
 const PORT = process.env.PORT || 4000;
-const CLIENT_ORIGIN = "*";
 const app = express();
 app.use(cors({ origin: "*" }));
 
@@ -41,6 +40,19 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("leave-room", ({ code }, cb) => {
+    try {
+      const room = game.getRoom(code);
+      if (room) {
+        game.leaveRoom(room, socket.id);
+        socket.leave(code);
+      }
+      cb?.({ ok: true });
+    } catch (err) {
+      cb?.({ ok: false, error: err.message });
+    }
+  });
+
   socket.on("rejoin-room", ({ code, token }, cb) => {
     try {
       const room = game.rejoinRoom(code.toUpperCase(), token, socket.id);
@@ -54,6 +66,17 @@ io.on("connection", (socket) => {
   socket.on("start-game", ({ code }, cb) => {
     try {
       game.startGame(code, socket.id);
+      cb?.({ ok: true });
+    } catch (err) {
+      cb?.({ ok: false, error: err.message });
+    }
+  });
+
+  socket.on("host-advance-night", ({ code, step }, cb) => {
+    try {
+      const room = game.getRoom(code);
+      if (!room) throw new Error("Кімнати не існує");
+      game.hostAdvanceNight(room, socket.id, step);
       cb?.({ ok: true });
     } catch (err) {
       cb?.({ ok: false, error: err.message });
@@ -77,8 +100,6 @@ io.on("connection", (socket) => {
     if (!room) return;
     game.addChatMessage(room, socket.id, text);
   });
-
-  // ---- Модерація ведучого ----
 
   socket.on("host-set-status", ({ code, targetId, status }, cb) => {
     try {
@@ -113,9 +134,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Простий relay для WebRTC сигналінгу (offer/answer/ice candidate).
-  // Сервер лише передає повідомлення напряму між двома гравцями,
-  // саме відео/аудіо йде peer-to-peer, не через сервер.
   socket.on("webrtc-signal", ({ to, data }) => {
     if (!to) return;
     io.to(to).emit("webrtc-signal", { from: socket.id, data });

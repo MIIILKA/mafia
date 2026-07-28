@@ -83,6 +83,16 @@
     }
   }
 
+  /* 🌙 Стилі для гравця, який спить */
+  &--sleeping {
+    border-color: rgba(90, 100, 140, 0.3);
+
+    .video-tile__video,
+    .video-tile__placeholder {
+      filter: brightness(0.15) blur(2px);
+    }
+  }
+
   &__overlay {
     position: absolute;
     inset: 0;
@@ -96,6 +106,10 @@
     }
     &--banished {
       background: rgba(20, 20, 30, 0.55);
+    }
+    /* Темний оверлей для сну */
+    &--sleeping {
+      background: rgba(5, 8, 18, 0.85);
     }
   }
 
@@ -115,6 +129,15 @@
     .video-tile__overlay--banished & {
       color: #c9c9d6;
       border: 2px solid #c9c9d6;
+    }
+    /* Штамп / напис для нічного сну */
+    .video-tile__overlay--sleeping & {
+      color: #7986cb;
+      border: 2px solid #5c6bc0;
+      transform: none; /* без нахилу для акуратності */
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 6px;
+      font-size: 16px;
     }
   }
 
