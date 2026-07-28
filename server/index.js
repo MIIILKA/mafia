@@ -83,6 +83,17 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("host-set-phase", ({ code, phase }, cb) => {
+    try {
+      const room = game.getRoom(code);
+      if (!room) throw new Error("Кімнати не існує");
+      game.hostSetPhase(room, socket.id, phase);
+      cb?.({ ok: true });
+    } catch (err) {
+      cb?.({ ok: false, error: err.message });
+    }
+  });
+
   socket.on("night-action", ({ code, payload }) => {
     const room = game.getRoom(code);
     if (!room) return;

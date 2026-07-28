@@ -31,11 +31,12 @@ export default function Game({
     const [actionSuccessMsg, setActionSuccessMsg] = useState("");
 
     const you = room.you;
-    const alivePlayers = room.players.filter((p) => p.alive && !p.isHost);
     const phase = room.phase;
     const isHost = Boolean(you?.isHost);
 
-    // Список живих гравців-гравців без ведучого
+    // Живі гравці (без ведучого)
+    const alivePlayers = room.players.filter((p) => p.alive && !p.isHost);
+    // Усі гравці (без ведучого)
     const realPlayers = room.players.filter((p) => !p.isHost);
 
     useEffect(() => {
@@ -90,8 +91,8 @@ export default function Game({
                                     className="action-panel__confirm"
                                     style={{ padding: "6px 12px", fontSize: "0.85rem", background: "#3182ce" }}
                                     onClick={() => {
-                                        const currentIndex = realPlayers.findIndex((p) => p.id === room.currentSpeakerId);
-                                        const nextPlayer = realPlayers[(currentIndex + 1) % realPlayers.length];
+                                        const currentIndex = alivePlayers.findIndex((p) => p.id === room.currentSpeakerId);
+                                        const nextPlayer = alivePlayers[(currentIndex + 1) % alivePlayers.length];
                                         onSetPhase("intro", { speakerId: nextPlayer?.id });
                                     }}
                                 >
@@ -116,7 +117,7 @@ export default function Game({
                                     style={{ padding: "6px 12px", fontSize: "0.85rem", background: "#dd6b20" }}
                                     onClick={() => onSetPhase("discussion")}
                                 >
-                                    ☀️ Настав ранок (Обговорення)
+                                    ☀️ Настав ранок (Завершити ніч)
                                 </button>
                             </>
                         )}
@@ -158,7 +159,7 @@ export default function Game({
 
             {!isHost && you?.role && phase !== "ended" && (
                 <div className={`game__role-banner game__role-banner--${you.role}`}>
-                    Ваша роль: <strong>{room.roleInfo[you.role]?.label || you.role}</strong>
+                    Ваша роль: <strong>{room.roleInfo?.[you.role]?.label || you.role}</strong>
                     {!you.alive && <span className="game__dead-tag"> — ви вибули з гри</span>}
                 </div>
             )}
