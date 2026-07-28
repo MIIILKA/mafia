@@ -33,14 +33,6 @@ export default function App() {
     forceMuteCam
   } = useWebRTC(socket, playerIds, room?.you?.id, Boolean(room));
 
-  // Автоматично пригнічуємо мікрофон/камеру, коли гравець "спить" вночі
-  useEffect(() => {
-    if (room?.phase === "night" && room?.you && !room.you.isHost && !room.you.isNightActive) {
-      forceMuteMic();
-      forceMuteCam();
-    }
-  }, [room?.phase, room?.nightStep, room?.you?.isNightActive]);
-
   useEffect(() => {
     function handleRoomState(state) {
       setRoom(state);
@@ -135,11 +127,9 @@ export default function App() {
     });
   }
 
-  function handleHostAdvanceNight(step) {
+  function handleHostSetPhase(phase, extraPayload = {}) {
     if (!room) return;
-    socket.emit("host-advance-night", { code: room.code, step }, (res) => {
-      if (res && !res.ok) setError(res.error);
-    });
+    socket.emit("host-set-phase", { code: room.code, phase, ...extraPayload });
   }
 
   function handleNightAction(payload) {
@@ -175,8 +165,6 @@ export default function App() {
                 players={room.players}
                 youId={room.you?.id}
                 isHostViewer={Boolean(room.you?.isHost)}
-                nightVisibleIds={room.you?.nightVisibleIds}
-                phase={room.phase}
                 localStream={localStream}
                 remoteStreams={remoteStreams}
                 showStatusOverlay={room.phase !== "lobby"}
@@ -202,7 +190,7 @@ export default function App() {
                 donResult={donResult}
                 hostNotebook={hostNotebook}
                 onNightAction={handleNightAction}
-                onAdvanceNight={handleHostAdvanceNight}
+                onSetPhase={handleHostSetPhase}
                 onVote={handleVote}
                 onSendMessage={handleSendMessage}
             />

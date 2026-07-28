@@ -12,7 +12,6 @@ export default function VideoTile({
                                     isSelf,
                                     isHost,
                                     status,
-                                    isSleeping,
                                     showStatusOverlay,
                                     disconnected,
                                     hostControls,
@@ -25,13 +24,15 @@ export default function VideoTile({
     if (videoRef.current) {
       videoRef.current.srcObject = stream || null;
     }
-  }, [stream, isSleeping]);
+  }, [stream]);
 
+  // Гравець вважається вибулим тільки якщо його вбили або вигнали
   const isEliminated = showStatusOverlay && (status === "killed" || status === "banished");
 
   return (
-      <div className={`video-tile ${isEliminated ? "video-tile--eliminated" : ""} ${isSleeping ? "video-tile--sleeping" : ""}`}>
-        {stream && !isSleeping ? (
+      <div className={`video-tile ${isEliminated ? "video-tile--eliminated" : ""}`}>
+        {/* Показуємо відео ТІЛЬКИ якщо гравець живий */}
+        {!isEliminated && stream ? (
             <video
                 ref={videoRef}
                 autoPlay
@@ -41,23 +42,18 @@ export default function VideoTile({
             />
         ) : (
             <div className="video-tile__placeholder">
-              <span>{isSleeping ? "🌙" : name?.[0]?.toUpperCase() || "?"}</span>
+              <span>{name?.[0]?.toUpperCase() || "?"}</span>
             </div>
         )}
 
-        {isSleeping && (
-            <div className="video-tile__overlay video-tile__overlay--sleeping">
-              <span className="video-tile__overlay-text">🌙 Спить</span>
-            </div>
-        )}
-
-        {isEliminated && !isSleeping && (
+        {/* Плашка, якщо гравця вбили/вигнали */}
+        {isEliminated && (
             <div className={`video-tile__overlay video-tile__overlay--${status}`}>
               <span className="video-tile__overlay-text">{STATUS_LABEL[status]}</span>
             </div>
         )}
 
-        {!isEliminated && !isSleeping && disconnected && (
+        {!isEliminated && disconnected && (
             <div className="video-tile__reconnecting">Перепідключення...</div>
         )}
 
