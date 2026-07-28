@@ -43,13 +43,13 @@ export class GameManager {
       tokenIndex: new Map(), // token -> socketId
       disconnectTimers: new Map(), // socketId -> Timeout
       nightActions: {},
-      nightStep: null, // null | "sleep" | "mafia" | "doctor" | "sheriff"
-      nightActiveIds: [], // хто зараз "не спить" (бачить камери)
+      nightStep: null, // "sleep" | "mafia" | "don" | "doctor" | "sheriff"
+      nightActiveIds: [], // хто зараз "не спить"
       seatOrder: [], // стабільний порядок гравців
       speakerQueue: [],
       speakerIndex: 0,
       currentSpeakerId: null,
-      leaderId: null, // лідер мафії (дон або перший мафіозі)
+      leaderId: null,
       votes: {},
       dayNumber: 0,
       log: [],
@@ -217,7 +217,6 @@ export class GameManager {
     room.log = [`Гра почалась. Гравців: ${participants.length}.`];
     room.nightHistory = [];
 
-    // ЗМІНА: Починаємо з Дня 1 (вільне спілкування / вступ), а НЕ з ночі!
     this.enterDiscussion(room);
   }
 
@@ -228,23 +227,24 @@ export class GameManager {
     room.nightActions = {};
     room.nightStep = "sleep";
     room.nightActiveIds = [];
+
+    // Записуємо нову ніч в історію блокнота
+    room.nightHistory.push({
+      day: room.dayNumber,
+      mafiaTargetName: null,
+      doctorHealName: null,
+      sheriffCheck: null,
+      donCheck: null,
+      killedName: null,
+      votedOutName: null
+    });
+
     room.log.push(`Ніч ${room.dayNumber} настала. Місто засинає.`);
-    room.nightHistory.push({ day: room.dayNumber });
     this.clearTimer(room);
     this.broadcastState(room);
     this.broadcastHostNotebook(room);
   }
-  hostSetPhase(room, requesterId, newPhase) {
-    if (room.hostId !== requesterId) throw new Error("Лише ведучий може це робити");
 
-    if (newPhase === PHASE.NIGHT) {
-      this.enterNight(room);
-    } else if (newPhase === PHASE.DISCUSSION) {
-      this.enterDiscussion(room);
-    } else if (newPhase === PHASE.VOTING) {
-      this.enterVoting(room);
-    }
-  }
   hostAdvanceNight(room, requesterId, step) {
     if (room.hostId !== requesterId) throw new Error("Лише ведучий може це робити");
     if (room.phase !== PHASE.NIGHT) throw new Error("Зараз не ніч");
@@ -263,23 +263,44 @@ export class GameManager {
     } else if (step === "mafia") {
       room.nightStep = "mafia";
       room.nightActiveIds = alive.filter((p) => this.isMafiaTeam(p)).map((p) => p.id);
-      room.log.push("Мафія прокидається.");
+      room.log.push("Прокидається Мафія.");
+    } else if (step === "don") {
+      const don = alive.find((p) => p.role === "don");
+      room.nightStep = "don";
+      room.nightActiveIds = don ? [don.id] : [];
+      room.log.push(don ? "Прокидається Дон." : "Ведучий викликає Дона.");
     } else if (step === "doctor") {
       const doctor = alive.find((p) => p.role === "doctor");
       room.nightStep = "doctor";
       room.nightActiveIds = doctor ? [doctor.id] : [];
-      room.log.push(doctor ? "Лікар прокидається." : "Ведучий викликає лікаря.");
+      room.log.push(doctor ? "Прокидається Лікар." : "Ведучий викликає Лікаря.");
     } else if (step === "sheriff") {
       const sheriff = alive.find((p) => p.role === "sheriff");
       room.nightStep = "sheriff";
       room.nightActiveIds = sheriff ? [sheriff.id] : [];
-      room.log.push(sheriff ? "Шериф прокидається." : "Ведучий викликає шерифа.");
+      room.log.push(sheriff ? "Прокидається Шериф." : "Ведучий викликає Шерифа.");
     } else {
       throw new Error("Невідомий крок ночі");
     }
 
     this.broadcastState(room);
     this.broadcastHostNotebook(room);
+  }
+
+  hostSetPhase(room, requesterId, newPhase) {
+    if (room.hostId !== requesterId) throw new Error("Лише ведучий може це робити");
+
+    if (newPhase === PHASE.NIGHT) {
+      this.enterNight(room);
+    } else if (newPhase === PHASE.DISCUSSION) {
+      if (room.phase === PHASE.NIGHT) {
+        this.resolveNight(room);
+      } else {
+        this.enterDiscussion(room);
+      }
+    } else if (newPhase === PHASE.VOTING) {
+      this.enterVoting(room);
+    }
   }
 
   currentNightEntry(room) {
@@ -330,8 +351,11 @@ export class GameManager {
     room.nightStep = null;
     room.nightActiveIds = [];
 
-    // Приховано ім'я вбитого у загальному лозі
-    room.log.push("Ніч пройшла. Місто прокидається.");
+    if (killedName) {
+      room.log.push(`Ніч пройшла. На жаль, вночі було вбито: ${killedName}.`);
+    } else {
+      room.log.push("Ніч пройшла. Усі живі!");
+    }
 
     this.broadcastHostNotebook(room);
     if (this.checkWinCondition(room)) return;
@@ -343,7 +367,7 @@ export class GameManager {
 
   enterDiscussion(room) {
     room.phase = PHASE.DISCUSSION;
-    room.log.push(`День ${room.dayNumber}. Балаган (${DISCUSSION_SECONDS} сек).`);
+    room.log.push(`День ${room.dayNumber}. Загальне обговорення.`);
     this.setTimer(room, DISCUSSION_SECONDS, () => this.enterSpeeches(room));
     this.broadcastState(room);
   }
@@ -383,12 +407,27 @@ export class GameManager {
   }
 
   enterVoting(room) {
+    // В День 1 за правилами немає вигнання під час голосування
+    if (room.dayNumber === 1) {
+      room.log.push("День 1: Голосування пропущено (перший день без вибування).");
+      room.dayNumber += 1;
+      this.enterNight(room);
+      return;
+    }
+
     room.phase = PHASE.VOTING;
     room.currentSpeakerId = null;
     room.votes = {};
     room.log.push("Голосування розпочалось.");
     this.setTimer(room, VOTING_SECONDS, () => this.resolveVoting(room));
     this.broadcastState(room);
+  }
+
+  skipVoting(room, requesterId) {
+    if (room.hostId !== requesterId) throw new Error("Лише ведучий може це робити");
+    room.log.push("Ведучий скасував голосування.");
+    room.dayNumber += 1;
+    this.enterNight(room);
   }
 
   resolveVoting(room) {
@@ -461,7 +500,6 @@ export class GameManager {
     if (!target || target.isHost) return;
 
     if (payload.type === "kill") {
-      // Мафія або Дон можуть вбивати під час ночі
       if (!this.isMafiaTeam(player)) return;
       room.nightActions.mafiaTarget = payload.targetId;
     } else if (payload.type === "heal") {
@@ -477,10 +515,8 @@ export class GameManager {
       return;
     }
 
-    // Одразу оновлюємо блокнот ведучого, щоб він побачив вибір мафії!
     this.broadcastHostNotebook(room);
   }
-
 
   submitVote(room, socketId, targetId) {
     const player = room.players.get(socketId);
@@ -578,8 +614,6 @@ export class GameManager {
       history: room.nightHistory.slice().reverse()
     };
   }
-
-
 
   // ---------- Timers ----------
 
