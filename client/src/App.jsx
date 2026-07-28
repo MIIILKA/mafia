@@ -184,6 +184,7 @@ export default function App() {
         )}
         {room && room.phase !== "lobby" && (
             <Game
+                socket={socket}
                 room={room}
                 messages={messages}
                 sheriffResult={sheriffResult}

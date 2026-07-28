@@ -32,19 +32,19 @@ export default function Game({
     const [voteSelection, setVoteSelection] = useState(null);
     const [actionSuccessMsg, setActionSuccessMsg] = useState("");
 
-    const you = room.you;
-    const phase = room.phase;
+    const you = room?.you;
+    const phase = room?.phase;
     const isHost = Boolean(you?.isHost);
 
-    const alivePlayers = room.players.filter((p) => p.alive && !p.isHost);
-    const realPlayers = room.players.filter((p) => !p.isHost);
+    const alivePlayers = (room?.players || []).filter((p) => p.alive && !p.isHost);
+    const realPlayers = (room?.players || []).filter((p) => !p.isHost);
 
     useEffect(() => {
         setNightSelection(null);
         setDonCheckSelection(null);
         setVoteSelection(null);
         setActionSuccessMsg("");
-    }, [phase, room.dayNumber, room.nightStep]);
+    }, [phase, room?.dayNumber, room?.nightStep]);
 
     function handleNightConfirm(type) {
         if (type === "check-sheriff") {
@@ -54,7 +54,7 @@ export default function Game({
             return;
         }
         if (!nightSelection) return;
-        if (type === "kill") playGunshot();
+        if (type === "kill") playGunshot?.();
         onNightAction({ type, targetId: nightSelection });
         setActionSuccessMsg("Вибір зафіксовано!");
     }
@@ -64,17 +64,17 @@ export default function Game({
         onVote(voteSelection);
     }
 
-    const currentSpeaker = realPlayers.find((p) => p.id === room.currentSpeakerId);
-    const isMyTurnToSpeak = room.currentSpeakerId === you?.id;
+    const currentSpeaker = realPlayers.find((p) => p.id === room?.currentSpeakerId);
+    const isMyTurnToSpeak = room?.currentSpeakerId === you?.id;
 
     return (
         <div className="game">
             <div className="game__top">
                 <div className="game__phase">
                     <span className="game__phase-label">{PHASE_LABEL[phase] || phase}</span>
-                    <span className="game__day">День {room.dayNumber}</span>
+                    <span className="game__day">День {room?.dayNumber}</span>
                 </div>
-                <Timer endsAt={room.timerEndsAt} />
+                <Timer endsAt={room?.timerEndsAt} />
             </div>
 
             {/* Баннер спікера (кнопка Завершити промову) */}
@@ -85,7 +85,7 @@ export default function Game({
                         type="button"
                         className="action-panel__confirm"
                         style={{ background: "#e53e3e", padding: "6px 14px", fontSize: "0.9rem" }}
-                        onClick={() => socket.emit("pass-speech", { code: room.code })}
+                        onClick={() => socket?.emit("pass-speech", { code: room?.code })}
                     >
                         Завершити промову 🛑
                     </button>
@@ -102,22 +102,22 @@ export default function Game({
                     <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", width: "100%" }}>
                         {phase === "night" && (
                             <>
-                                <button type="button" style={{ background: "#4a5568", padding: "6px 10px", fontSize: "0.85rem" }} onClick={() => socket.emit("host-advance-night", { code: room.code, step: "sleep" })}>
+                                <button type="button" style={{ background: "#4a5568", padding: "6px 10px", fontSize: "0.85rem" }} onClick={() => socket?.emit("host-advance-night", { code: room?.code, step: "sleep" })}>
                                     💤 Усі сплять
                                 </button>
-                                <button type="button" style={{ background: "#e53e3e", padding: "6px 10px", fontSize: "0.85rem" }} onClick={() => socket.emit("host-advance-night", { code: room.code, step: "mafia" })}>
+                                <button type="button" style={{ background: "#e53e3e", padding: "6px 10px", fontSize: "0.85rem" }} onClick={() => socket?.emit("host-advance-night", { code: room?.code, step: "mafia" })}>
                                     🔴 Мафія
                                 </button>
-                                <button type="button" style={{ background: "#d69e2e", padding: "6px 10px", fontSize: "0.85rem" }} onClick={() => socket.emit("host-advance-night", { code: room.code, step: "don" })}>
+                                <button type="button" style={{ background: "#d69e2e", padding: "6px 10px", fontSize: "0.85rem" }} onClick={() => socket?.emit("host-advance-night", { code: room?.code, step: "don" })}>
                                     🟡 Дон
                                 </button>
-                                <button type="button" style={{ background: "#38a169", padding: "6px 10px", fontSize: "0.85rem" }} onClick={() => socket.emit("host-advance-night", { code: room.code, step: "doctor" })}>
+                                <button type="button" style={{ background: "#38a169", padding: "6px 10px", fontSize: "0.85rem" }} onClick={() => socket?.emit("host-advance-night", { code: room?.code, step: "doctor" })}>
                                     🟢 Лікар
                                 </button>
-                                <button type="button" style={{ background: "#3182ce", padding: "6px 10px", fontSize: "0.85rem" }} onClick={() => socket.emit("host-advance-night", { code: room.code, step: "sheriff" })}>
+                                <button type="button" style={{ background: "#3182ce", padding: "6px 10px", fontSize: "0.85rem" }} onClick={() => socket?.emit("host-advance-night", { code: room?.code, step: "sheriff" })}>
                                     🔵 Шериф
                                 </button>
-                                <button type="button" style={{ background: "#dd6b20", padding: "6px 10px", fontSize: "0.85rem", fontWeight: "bold" }} onClick={() => socket.emit("host-advance-night", { code: room.code, step: "resolve" })}>
+                                <button type="button" style={{ background: "#dd6b20", padding: "6px 10px", fontSize: "0.85rem", fontWeight: "bold" }} onClick={() => socket?.emit("host-advance-night", { code: room?.code, step: "resolve" })}>
                                     ☀️ Завершити ніч
                                 </button>
                             </>
@@ -128,7 +128,7 @@ export default function Game({
                                 type="button"
                                 className="action-panel__confirm"
                                 style={{ padding: "6px 12px", fontSize: "0.85rem", background: "#3182ce" }}
-                                onClick={() => socket.emit("pass-speech", { code: room.code })}
+                                onClick={() => socket?.emit("pass-speech", { code: room?.code })}
                             >
                                 🎙 Передати слово наступному
                             </button>
@@ -161,7 +161,7 @@ export default function Game({
                                     type="button"
                                     className="action-panel__confirm"
                                     style={{ padding: "6px 12px", fontSize: "0.85rem", background: "#718096" }}
-                                    onClick={() => socket.emit("skip-voting", { code: room.code })}
+                                    onClick={() => socket?.emit("skip-voting", { code: room?.code })}
                                 >
                                     ⏩ Пропустити голосування
                                 </button>
@@ -181,7 +181,7 @@ export default function Game({
 
             {!isHost && you?.role && phase !== "ended" && (
                 <div className={`game__role-banner game__role-banner--${you.role}`}>
-                    Ваша роль: <strong>{room.roleInfo?.[you.role]?.label || you.role}</strong>
+                    Ваша роль: <strong>{room?.roleInfo?.[you.role]?.label || you.role}</strong>
                     {!you.alive && <span className="game__dead-tag"> — ви вибули з гри</span>}
                 </div>
             )}
@@ -204,7 +204,6 @@ export default function Game({
                 <div className="game__main">
                     {isHost && <HostNotebook notebook={hostNotebook} />}
 
-                    {/* Відображення поточного спікера */}
                     {(phase === "speeches" || phase === "intro") && (
                         <div className="game__info-box" style={{ borderColor: "#3182ce" }}>
                             🎙 <strong>Виступи по колу!</strong>
@@ -218,11 +217,10 @@ export default function Game({
                         </div>
                     )}
 
-                    {/* Нічний блок рішений залежно від room.nightStep */}
                     {!isHost && phase === "night" && you?.alive && (
                         <NightStepPanel
                             role={you.role}
-                            nightStep={room.nightStep}
+                            nightStep={room?.nightStep}
                             players={alivePlayers}
                             youId={you.id}
                             selection={nightSelection}
@@ -260,19 +258,19 @@ export default function Game({
 
                     {phase === "ended" && (
                         <div className="game__info-box game__info-box--ended">
-                            {room.log[room.log.length - 1]}
+                            {room?.log?.[room.log.length - 1]}
                         </div>
                     )}
 
                     <div className="game__players">
                         <h3>Гравці</h3>
-                        <PlayerList players={room.players} youId={you?.id} roleInfo={room.roleInfo} />
+                        <PlayerList players={room?.players || []} youId={you?.id} roleInfo={room?.roleInfo} />
                     </div>
 
                     <div className="game__log">
                         <h3>Хроніка</h3>
                         <ul>
-                            {room.log
+                            {(room?.log || [])
                                 .slice()
                                 .reverse()
                                 .map((entry, i) => (
@@ -365,7 +363,6 @@ function NightStepPanel({
                 />
             )}
 
-            {/* Якщо зараз іде крок не для вашої ролі */}
             {((nightStep === "mafia" && !isMafiaType) ||
                 (nightStep === "don" && role !== "don") ||
                 (nightStep === "doctor" && role !== "doctor") ||
