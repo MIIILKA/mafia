@@ -1,0 +1,126 @@
+.end-summary {
+  padding: 28px 24px;
+  border-radius: 18px;
+  text-align: center;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75);
+
+  &--mafia {
+    background: radial-gradient(circle at top, rgba(155, 44, 44, 0.45), rgba(18, 16, 22, 0.96));
+    border-color: rgba(229, 62, 62, 0.55);
+  }
+
+  &--citizens {
+    background: radial-gradient(circle at top, rgba(214, 158, 46, 0.35), rgba(18, 20, 26, 0.96));
+    border-color: rgba(246, 173, 85, 0.55);
+  }
+
+  &__icon {
+    font-size: 52px;
+    margin-bottom: 8px;
+  }
+
+  &__title {
+    margin: 0 0 6px;
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    color: #fff;
+  }
+
+  &__subtitle {
+    margin: 0 0 22px;
+    font-size: 14px;
+    color: #cbd5e0;
+  }
+
+  &__roster {
+    text-align: left;
+    margin-bottom: 22px;
+
+    h4 {
+      margin: 0 0 12px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #a0aec0;
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+  }
+
+  &__player {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+
+    &--dead {
+      opacity: 0.65;
+    }
+  }
+
+  &__seat {
+    font-size: 11px;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 5px;
+    color: #f6ad55;
+    background: rgba(246, 173, 85, 0.15);
+  }
+
+  &__name {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 700;
+    color: #f7fafc;
+  }
+
+  &__role {
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+  }
+
+  .role-tag--don,
+  .role-tag--mafia {
+    background: rgba(229, 62, 62, 0.3);
+    color: #feb2b2;
+  }
+  .role-tag--sheriff {
+    background: rgba(49, 130, 206, 0.3);
+    color: #90cdf4;
+  }
+  .role-tag--doctor {
+    background: rgba(56, 161, 105, 0.3);
+    color: #9ae6b4;
+  }
+
+  &__reset-btn {
+    padding: 14px 28px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #fff;
+    background: linear-gradient(135deg, #e53e3e 0%, #9b2c2c 100%);
+    box-shadow: 0 6px 20px rgba(229, 62, 62, 0.45);
+    cursor: pointer;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+  }
+}

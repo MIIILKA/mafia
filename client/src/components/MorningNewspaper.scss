@@ -1,0 +1,124 @@
+.newspaper-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 5, 8, 0.82);
+  backdrop-filter: blur(8px);
+  padding: 20px;
+  animation: fadeInNews 0.3s ease-out;
+}
+
+.newspaper {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  padding: 28px 26px;
+  background: linear-gradient(145deg, #e8e2d5 0%, #cfc6b4 100%);
+  color: #1a1815;
+  border-radius: 6px;
+  border: 3px solid #2b2722;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.9), inset 0 0 40px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  font-family: "Georgia", "Times New Roman", serif;
+  animation: spinDropNews 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+
+  &__top-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid #2b2722;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+  }
+
+  &__brand {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  &__divider {
+    height: 3px;
+    border-top: 1px solid #2b2722;
+    border-bottom: 1px solid #2b2722;
+    margin: 10px 0 18px;
+  }
+
+  &__stamp {
+    display: inline-block;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    border: 2px solid;
+    transform: rotate(-3deg);
+    margin-bottom: 12px;
+
+    &--blood {
+      color: #9b1c1c;
+      border-color: #9b1c1c;
+    }
+
+    &--peace {
+      color: #1e429f;
+      border-color: #1e429f;
+    }
+  }
+
+  &__headline {
+    margin: 0 0 12px;
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1.25;
+  }
+
+  &__text {
+    margin: 0 0 20px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #2d2924;
+  }
+
+  &__close {
+    padding: 9px 20px;
+    background: #1a1815;
+    color: #e8e2d5;
+    border: none;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:hover {
+      background: #9b1c1c;
+    }
+  }
+}
+
+@keyframes spinDropNews {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotate(-14deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes fadeInNews {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

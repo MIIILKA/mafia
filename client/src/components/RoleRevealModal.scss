@@ -1,0 +1,221 @@
+.role-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 5, 10, 0.86);
+  backdrop-filter: blur(10px);
+  animation: fadeInBackdrop 0.35s ease-out;
+  padding: 20px;
+}
+
+.role-card {
+  width: 320px;
+  height: 460px;
+  perspective: 1200px;
+  cursor: pointer;
+
+  &__inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+    transform-style: preserve-3d;
+  }
+
+  &--flipped &__inner {
+    transform: rotateY(180deg);
+  }
+
+  &__front,
+  &__back {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    border-radius: 22px;
+    padding: 28px 22px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
+    overflow: hidden;
+  }
+
+  /* Сорочка карти */
+  &__front {
+    background: radial-gradient(circle at center, #1e1c26 0%, #0d0c12 100%);
+    border: 2px solid rgba(214, 158, 46, 0.45);
+  }
+
+  &__crest {
+    font-size: 64px;
+    margin-bottom: 14px;
+    filter: drop-shadow(0 0 20px rgba(214, 158, 46, 0.4));
+  }
+
+  &__brand {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 0.25em;
+    color: #f6e05e;
+  }
+
+  &__tap {
+    margin-top: 24px;
+    font-size: 12px;
+    color: #a0aec0;
+    letter-spacing: 0.06em;
+  }
+
+  /* Лицьова сторона */
+  &__back {
+    transform: rotateY(180deg);
+    background: linear-gradient(160deg, #1b1b26 0%, #0e0e14 100%);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+  }
+
+  &__shine {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+            115deg,
+            transparent 40%,
+            rgba(255, 255, 255, 0.08) 50%,
+            transparent 60%
+    );
+    animation: cardShine 4s infinite linear;
+    pointer-events: none;
+  }
+
+  &__seat {
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    color: #14110b;
+    background: linear-gradient(135deg, #f6e05e, #d69e2e);
+    margin-bottom: 18px;
+  }
+
+  &__icon {
+    font-size: 68px;
+    margin-bottom: 12px;
+  }
+
+  &__title {
+    margin: 0 0 6px;
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    color: #fff;
+  }
+
+  &__subtitle {
+    margin: 0 0 16px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.85;
+  }
+
+  &__desc {
+    margin: 0 0 24px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #cbd5e0;
+  }
+
+  &__btn {
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.2s, filter 0.2s;
+
+    &:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.15);
+    }
+  }
+
+  /* Теми ролей */
+  &--mafia &__back {
+    border-color: #e53e3e;
+    box-shadow: 0 0 45px rgba(229, 62, 62, 0.45);
+    .role-card__title,
+    .role-card__subtitle {
+      color: #fc8181;
+    }
+    .role-card__btn {
+      background: linear-gradient(135deg, #e53e3e, #9b2c2c);
+    }
+  }
+
+  &--sheriff &__back {
+    border-color: #3182ce;
+    box-shadow: 0 0 45px rgba(49, 130, 206, 0.45);
+    .role-card__title,
+    .role-card__subtitle {
+      color: #63b3ed;
+    }
+    .role-card__btn {
+      background: linear-gradient(135deg, #3182ce, #2b6cb0);
+    }
+  }
+
+  &--doctor &__back {
+    border-color: #38a169;
+    box-shadow: 0 0 45px rgba(56, 161, 105, 0.45);
+    .role-card__title,
+    .role-card__subtitle {
+      color: #68d391;
+    }
+    .role-card__btn {
+      background: linear-gradient(135deg, #38a169, #276749);
+    }
+  }
+
+  &--citizen &__back {
+    border-color: #d69e2e;
+    box-shadow: 0 0 40px rgba(214, 158, 46, 0.3);
+    .role-card__title {
+      color: #faf089;
+    }
+    .role-card__btn {
+      background: linear-gradient(135deg, #d69e2e, #975a16);
+    }
+  }
+}
+
+@keyframes cardShine {
+  0% {
+    transform: translate(-30%, -30%);
+  }
+  100% {
+    transform: translate(30%, 30%);
+  }
+}
+
+@keyframes fadeInBackdrop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

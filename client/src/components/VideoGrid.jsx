@@ -8,21 +8,30 @@ export default function VideoGrid({
                                       localStream,
                                       remoteStreams,
                                       showStatusOverlay,
+                                      currentSpeakerId,
+                                      phase,
+                                      nightVisibleIds,
+                                      gestures,
                                       mediaError,
                                       micOn,
                                       camOn,
+                                      canTransferHost,
                                       onToggleMic,
                                       onToggleCam,
+                                      onSendGesture,
                                       onHostSetStatus,
                                       onHostKick,
-                                      onHostMediaControl
+                                      onHostMediaControl,
+                                      onHostTransferHost
                                   }) {
     return (
         <div className="video-grid-wrap">
             <div className="video-grid">
                 {players.map((p) => {
                     const isSelf = p.id === youId;
-
+                    const isSpeaking = phase === "speeches" && currentSpeakerId === p.id;
+                    // Вночі бачимо камеру лише якщо ми ведучий, це наша камера, або гравець зараз прокинувся (наприклад, мафія)
+                    const isHiddenByNight = false;
                     const hostControls =
                         isHostViewer && !isSelf
                             ? {
@@ -30,6 +39,14 @@ export default function VideoGrid({
                                 onMuteCam: () => onHostMediaControl(p.id, "mute-cam"),
                                 onKill: () => onHostSetStatus(p.id, "killed"),
                                 onBanish: () => onHostSetStatus(p.id, "banished"),
+                                onTransferHost:
+                                    canTransferHost && onHostTransferHost
+                                        ? () => {
+                                            if (window.confirm(`Передати роль Ведучого гравцю ${p.name}?`)) {
+                                                onHostTransferHost(p.id);
+                                            }
+                                        }
+                                        : null,
                                 onRevive: () => onHostSetStatus(p.id, "alive"),
                                 onKick: () => {
                                     if (window.confirm(`Вилучити гравця ${p.name} з кімнати?`)) {
@@ -42,9 +59,13 @@ export default function VideoGrid({
                     return (
                         <VideoTile
                             key={p.id}
+                            number={p.number}
                             name={p.name}
                             isHost={p.isHost}
                             isSelf={isSelf}
+                            isSpeaking={isSpeaking}
+                            isHiddenByNight={isHiddenByNight}
+                            gesture={gestures?.[p.id]}
                             status={p.status}
                             disconnected={p.disconnected}
                             showStatusOverlay={showStatusOverlay}
@@ -77,6 +98,27 @@ export default function VideoGrid({
                             {camOn ? "📷 Камера" : "🚫 Камера вимкнена"}
                         </button>
                     </>
+                )}
+
+                {onSendGesture && (
+                    <div className="video-grid-controls__gestures">
+                        {[
+                            { icon: "👍", label: "Вірю" },
+                            { icon: "👎", label: "Підозрюю" },
+                            { icon: "❓", label: "Хто ти?" },
+                            { icon: "🤝", label: "Підтримую" }
+                        ].map((g) => (
+                            <button
+                                key={g.icon}
+                                type="button"
+                                className="video-grid-controls__gesture-btn"
+                                onClick={() => onSendGesture(`${g.icon} ${g.label}`)}
+                                title={g.label}
+                            >
+                                {g.icon}
+                            </button>
+                        ))}
+                    </div>
                 )}
             </div>
         </div>

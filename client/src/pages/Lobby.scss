@@ -1,53 +1,155 @@
-@use "../styles/variables" as *;
-@use "../styles/mixins" as *;
-
 .lobby {
   width: 100%;
-  max-width: 480px;
+  max-width: 540px;
+  margin: 10px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 
   &__header {
     text-align: center;
-    margin-bottom: 20px;
 
     h2 {
-      color: $color-accent-light;
+      margin: 0 0 6px;
+      font-size: 32px;
+      font-weight: 900;
       letter-spacing: 0.08em;
+      background: linear-gradient(135deg, #fff 20%, #fc8181 60%, #e53e3e 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 4px 25px rgba(229, 62, 62, 0.3);
     }
   }
 
   &__hint {
-    color: $color-text-muted;
+    margin: 0;
     font-size: 14px;
+    color: #a0aec0;
   }
 
   &__card {
-    @include card;
+    padding: 24px;
+    border-radius: 18px;
+    background: linear-gradient(145deg, rgba(26, 26, 36, 0.9), rgba(16, 16, 22, 0.96));
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.65);
   }
 
   &__players-title {
-    font-size: 15px;
-    color: $color-text-muted;
-    margin-bottom: 12px;
+    margin: 0 0 14px;
+    font-size: 14px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #cbd5e0;
   }
 
   &__start {
-    @include button-base;
     width: 100%;
-    margin-top: 20px;
-    background: $color-accent;
-    color: white;
-    padding: 14px;
-    font-size: 16px;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #fff;
+    background: linear-gradient(135deg, #e53e3e 0%, #9b2c2c 100%);
+    box-shadow: 0 6px 20px rgba(229, 62, 62, 0.45);
+    cursor: pointer;
+    transition: all 0.25s;
 
-    &:not(:disabled):hover {
-      background: $color-accent-light;
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(229, 62, 62, 0.65);
+    }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
     }
   }
 
   &__waiting {
-    margin-top: 20px;
     text-align: center;
-    color: $color-text-muted;
     font-size: 14px;
+    color: #f6ad55;
+    padding: 10px;
+    border-radius: 10px;
+    background: rgba(246, 173, 85, 0.1);
+    border: 1px solid rgba(246, 173, 85, 0.25);
   }
+}
+
+.error-banner {
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fed7d7;
+  background: rgba(229, 62, 62, 0.2);
+  border: 1px solid rgba(252, 129, 129, 0.5);
+  text-align: center;
+}
+.lobby__copy-btn {
+  margin-top: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(246, 173, 85, 0.4);
+  background: rgba(246, 173, 85, 0.12);
+  color: #f6ad55;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lobby__deck-info {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 3px solid #f6ad55;
+}
+
+.lobby__roles-guide {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(12, 12, 18, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.lobby__roles-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.lobby__role-pill {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: #a0aec0;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &--active {
+    background: #e53e3e;
+    border-color: #fc8181;
+    color: #fff;
+  }
+}
+
+.lobby__role-desc {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #cbd5e0;
 }

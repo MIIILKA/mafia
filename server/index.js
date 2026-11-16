@@ -144,26 +144,110 @@ io.on("connection", (socket) => {
     game.submitVote(room, socket.id, targetId);
   });
 
-  socket.on("chat-message", ({ code, text }) => {
-    const cleanCode = code ? code.toUpperCase() : "";
-    const room = game.getRoom(cleanCode);
-    if (!room) return;
-    game.addChatMessage(room, socket.id, text);
+  socket.on("host-set-role-config", ({ code, config }, cb) => {
+    try {
+      const cleanCode = code ? code.toUpperCase() : "";
+      const room = game.getRoom(cleanCode);
+      if (!room) throw new Error("Кімнати не існує");
+      game.setRoleConfig(room, socket.id, config);
+      cb?.({ ok: true });
+    } catch (err) {
+      cb?.({ ok: false, error: err.message });
+    }
   });
 // У місці, де підключені сокет-події:
   socket.on("host-pause-timer", ({ code }) => {
-    const room = gameManager.getRoom(code);
-    if (room) gameManager.pauseTimer(room, socket.id);
+    const cleanCode = code ? code.toUpperCase() : "";
+    const room = game.getRoom(cleanCode);
+    if (room) game.pauseTimer(room, socket.id);
   });
 
   socket.on("host-resume-timer", ({ code }) => {
-    const room = gameManager.getRoom(code);
-    if (room) gameManager.resumeTimer(room, socket.id);
+    const cleanCode = code ? code.toUpperCase() : "";
+    const room = game.getRoom(cleanCode);
+    if (room) game.resumeTimer(room, socket.id);
   });
 
   socket.on("host-add-time", ({ code, seconds }) => {
-    const room = gameManager.getRoom(code);
-    if (room) gameManager.addDiscussionTime(room, socket.id, seconds || 30);
+    const cleanCode = code ? code.toUpperCase() : "";
+    const room = game.getRoom(cleanCode);
+    if (room) game.addDiscussionTime(room, socket.id, seconds || 30);
+  });
+  socket.on("host-reset-lobby", ({ code }, cb) => {
+    try {
+      const cleanCode = code ? code.toUpperCase() : "";
+      const room = game.getRoom(cleanCode);
+      if (!room) throw new Error("Кімнати не існує");
+      game.resetToLobby(room, socket.id);
+      cb?.({ ok: true });
+    } catch (err) {
+      cb?.({ ok: false, error: err.message });
+    }
+  });
+// Заміни існуючий chat-message на цей:
+  socket.on("chat-message", ({ code, text, channel }) => {
+    const cleanCode = code ? code.toUpperCase() : "";
+    const room = game.getRoom(cleanCode);
+    if (!room) return;
+    game.addChatMessage(room, socket.id, text, channel || "public");
+  });
+
+  // Виставлення кандидатури на голосування
+  socket.on("nominate-player", ({ code, targetId }, cb) => {
+    try {
+      const cleanCode = code ? code.toUpperCase() : "";
+      const room = game.getRoom(cleanCode);
+      if (!room) throw new Error("Кімнати не існує");
+      game.nominatePlayer(room, socket.id, targetId);
+      cb?.({ ok: true });
+    } catch (err) {
+      cb?.({ ok: false, error: err.message });
+    }
+  });
+
+  // Жести гравців на відео-картках (бачать усі в кімнаті)
+  socket.on("player-gesture", ({ code, gesture }) => {
+    const cleanCode = code ? code.toUpperCase() : "";
+    const room = game.getRoom(cleanCode);
+    if (!room) return;
+    io.to(room.code).emit("player-gesture", { playerId: socket.id, gesture });
+  });
+
+  // Повернення в лобі для нової гри
+  socket.on("host-reset-lobby", ({ code }, cb) => {
+    try {
+      const cleanCode = code ? code.toUpperCase() : "";
+      const room = game.getRoom(cleanCode);
+      if (!room) throw new Error("Кімнати не існує");
+      game.resetToLobby(room, socket.id);
+      cb?.({ ok: true });
+    } catch (err) {
+      cb?.({ ok: false, error: err.message });
+    }
+  });
+
+  // Передача ролі ведучого
+  socket.on("host-transfer-host", ({ code, targetId }, cb) => {
+    try {
+      const cleanCode = code ? code.toUpperCase() : "";
+      const room = game.getRoom(cleanCode);
+      if (!room) throw new Error("Кімнати не існує");
+      game.transferHost(room, socket.id, targetId);
+      cb?.({ ok: true });
+    } catch (err) {
+      cb?.({ ok: false, error: err.message });
+    }
+  });
+  socket.on("host-transfer-host", ({ code, targetId }, cb) => {
+    try {
+      const cleanCode = code ? code.toUpperCase() : "";
+      const room = game.getRoom(cleanCode);
+      if (!room) throw new Error("Кімнати не існує");
+      game.transferHost(room, socket.id, targetId);
+      cb?.({ ok: true });
+    } catch (err) {
+      cb?.({ ok: false, error: err.message });
+    }
   });
   socket.on("host-set-status", ({ code, targetId, status }, cb) => {
     try {

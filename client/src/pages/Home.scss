@@ -1,96 +1,324 @@
-@use "../styles/variables" as *;
-@use "../styles/mixins" as *;
+.home-stage {
+  position: relative;
+  min-height: calc(100vh - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Іскри попелу сигари */
+.home-embers {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ember {
+  position: absolute;
+  bottom: -10px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #f6ad55 0%, #e53e3e 70%, transparent 100%);
+  box-shadow: 0 0 10px #e53e3e;
+  opacity: 0;
+  animation: riseEmber linear infinite;
+
+  @for $i from 1 through 14 {
+    &--#{$i} {
+      left: ($i * 7%) - 3%;
+      animation-duration: 7s + ($i % 5) * 2s;
+      animation-delay: ($i * 0.6s);
+      width: 3px + ($i % 3) * 1px;
+      height: 3px + ($i % 3) * 1px;
+    }
+  }
+}
+
+@keyframes riseEmber {
+  0% {
+    transform: translateY(0) translateX(0) scale(0.8);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.75;
+  }
+  80% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: translateY(-105vh) translateX(35px) scale(0.2);
+    opacity: 0;
+  }
+}
+
+/* Плаваючі 3D-картки з паралаксом */
+.floating-card {
+  position: absolute;
+  width: 170px;
+  height: 245px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(32, 32, 44, 0.75), rgba(14, 14, 20, 0.9));
+  border: 1.5px solid rgba(214, 158, 46, 0.3);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  pointer-events: none;
+  transition: transform 0.12s ease-out;
+  z-index: 1;
+
+  @media (max-width: 900px) {
+    display: none;
+  }
+
+  &--left {
+    left: calc(50% - 430px);
+    top: 22%;
+  }
+
+  &--right {
+    right: calc(50% - 430px);
+    bottom: 18%;
+    border-color: rgba(229, 62, 62, 0.35);
+  }
+
+  &__corner {
+    align-self: flex-start;
+    font-size: 20px;
+    font-weight: 900;
+    color: #f6e05e;
+  }
+
+  &__center {
+    font-size: 56px;
+    filter: drop-shadow(0 0 18px rgba(229, 62, 62, 0.45));
+  }
+
+  &__label {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.25em;
+    color: rgba(255, 255, 255, 0.35);
+  }
+}
 
 .home {
+  position: relative;
+  z-index: 2;
   width: 100%;
-  max-width: 420px;
-  margin-top: 40px;
+  max-width: 440px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
 
-  &__title {
-    font-size: 36px;
-    color: $color-accent-light;
+  &__badge {
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    color: #f6ad55;
+    background: rgba(246, 173, 85, 0.12);
+    border: 1px solid rgba(246, 173, 85, 0.35);
+    margin-bottom: 10px;
   }
 
-  &__subtitle {
-    color: $color-text-muted;
-    margin-bottom: 28px;
+  &__title {
+    margin: 0 0 10px;
+    font-size: 42px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    background: linear-gradient(135deg, #fff 20%, #fc8181 65%, #e53e3e 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 6px 30px rgba(229, 62, 62, 0.35);
+  }
+
+  &__telegram {
+    margin: 0 0 26px;
+    min-height: 20px;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #cbd5e0;
+  }
+
+  &__cursor {
+    color: #e53e3e;
+    animation: blinkCursor 0.8s infinite;
   }
 
   &__card {
-    @include card;
+    position: relative;
+    overflow: hidden;
     width: 100%;
+    padding: 28px 26px;
+    border-radius: 20px;
+    background: linear-gradient(145deg, rgba(26, 26, 36, 0.92), rgba(15, 15, 22, 0.96));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
     text-align: left;
+  }
+
+  /* Періодичний діагональний відблиск скла */
+  &__card-sheen {
+    position: absolute;
+    top: -100%;
+    left: -100%;
+    width: 250%;
+    height: 250%;
+    background: linear-gradient(
+            115deg,
+            transparent 44%,
+            rgba(255, 255, 255, 0.06) 50%,
+            transparent 56%
+    );
+    animation: glassSheen 6s infinite ease-in-out;
+    pointer-events: none;
+  }
+
+  &__stamp {
+    position: absolute;
+    bottom: 12px;
+    right: 14px;
+    padding: 2px 8px;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    color: rgba(229, 62, 62, 0.45);
+    border: 1px solid rgba(229, 62, 62, 0.35);
+    border-radius: 4px;
+    transform: rotate(-8deg);
+    pointer-events: none;
   }
 
   &__tabs {
     display: flex;
     gap: 6px;
-    margin-bottom: 20px;
-    background: $color-surface-light;
-    border-radius: $radius;
-    padding: 4px;
+    margin-bottom: 22px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 12px;
+    padding: 5px;
   }
 
   &__tab {
-    @include button-base;
     flex: 1;
+    border: none;
+    border-radius: 9px;
     background: transparent;
-    color: $color-text-muted;
+    color: #a0aec0;
+    font-weight: 700;
+    font-size: 13px;
     padding: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
 
     &--active {
-      background: $color-accent;
-      color: white;
+      background: linear-gradient(135deg, #e53e3e, #9b2c2c);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(229, 62, 62, 0.35);
     }
   }
 
   &__form {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 18px;
   }
 
   &__label {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 7px;
     font-size: 13px;
-    color: $color-text-muted;
+    font-weight: 600;
+    color: #cbd5e0;
+  }
+
+  &__input-row {
+    display: flex;
+    gap: 8px;
   }
 
   &__input {
-    background: $color-surface-light;
-    border: 1px solid $color-border;
-    border-radius: $radius;
+    flex: 1;
+    background: rgba(14, 14, 20, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
     padding: 12px 14px;
-    color: $color-text;
+    color: #fff;
     font-size: 15px;
 
     &:focus {
       outline: none;
-      border-color: $color-accent;
+      border-color: #e53e3e;
     }
 
     &--code {
       text-transform: uppercase;
-      letter-spacing: 0.15em;
-      font-weight: 700;
+      letter-spacing: 0.2em;
+      font-weight: 800;
+      text-align: center;
+    }
+  }
+
+  &__alias-btn {
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(246, 173, 85, 0.35);
+    background: rgba(246, 173, 85, 0.12);
+    font-size: 18px;
+    cursor: pointer;
+    transition: transform 0.2s;
+
+    &:hover {
+      transform: rotate(20deg) scale(1.05);
     }
   }
 
   &__submit {
-    @include button-base;
-    background: $color-accent;
-    color: white;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #e53e3e 0%, #9b2c2c 100%);
+    color: #fff;
     padding: 14px;
-    font-size: 16px;
+    font-size: 15px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(229, 62, 62, 0.4);
+    transition: all 0.25s;
 
-    &:not(:disabled):hover {
-      background: $color-accent-light;
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 28px rgba(229, 62, 62, 0.75);
     }
+  }
+}
+
+@keyframes blinkCursor {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes glassSheen {
+  0%, 60% {
+    transform: translate(-35%, -35%);
+  }
+  100% {
+    transform: translate(35%, 35%);
   }
 }

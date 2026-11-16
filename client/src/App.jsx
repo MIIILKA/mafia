@@ -18,6 +18,7 @@ export default function App() {
   const [donResult, setDonResult] = useState(null);
   const [kickedNotice, setKickedNotice] = useState("");
   const [hostNotebook, setHostNotebook] = useState(null);
+  const [gestures, setGestures] = useState({});
 
   const playerIds = useMemo(() => (room ? room.players.map((p) => p.id) : []), [room]);
 
@@ -38,7 +39,12 @@ export default function App() {
       setRoom(state);
     }
     function handleChat(message) {
-      setMessages((prev) => [...prev, message]);
+      setMessages((prev) => {
+        const isDuplicate = prev.some(
+            (m) => m.ts === message.ts && m.author === message.author && m.text === message.text
+        );
+        return isDuplicate ? prev : [...prev, message];
+      });
     }
     function handleSheriffResult(result) {
       setSheriffResult(result);
@@ -47,6 +53,10 @@ export default function App() {
     function handleDonResult(result) {
       setDonResult(result);
       setTimeout(() => setDonResult(null), 8000);
+    }
+    function handleSetRoleConfig(config) {
+      if (!room) return;
+      socket.emit("host-set-role-config", { code: room.code, config });
     }
     function handleKicked() {
       setRoom(null);
@@ -60,6 +70,16 @@ export default function App() {
     }
     function handleHostNotebook(notebook) {
       setHostNotebook(notebook);
+    }
+    function handleGesture({ playerId, gesture }) {
+      setGestures((prev) => ({ ...prev, [playerId]: gesture }));
+      setTimeout(() => {
+        setGestures((prev) => {
+          const next = { ...prev };
+          if (next[playerId] === gesture) delete next[playerId];
+          return next;
+        });
+      }, 3500);
     }
     function attemptRejoin() {
       const savedCode = getSavedRoomCode();
@@ -76,6 +96,7 @@ export default function App() {
     socket.on("kicked-from-room", handleKicked);
     socket.on("forced-media-control", handleForcedMedia);
     socket.on("host-notebook", handleHostNotebook);
+    socket.on("player-gesture", handleGesture);
     socket.on("connect", attemptRejoin);
 
     attemptRejoin();
@@ -88,6 +109,7 @@ export default function App() {
       socket.off("kicked-from-room", handleKicked);
       socket.off("forced-media-control", handleForcedMedia);
       socket.off("host-notebook", handleHostNotebook);
+      socket.off("player-gesture", handleGesture);
       socket.off("connect", attemptRejoin);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -127,6 +149,18 @@ export default function App() {
     });
   }
 
+  function handleTransferHost(targetId) {
+    if (!room) return;
+    socket.emit("host-transfer-host", { code: room.code, targetId }, (res) => {
+      if (res && !res.ok) setError(res.error);
+    });
+  }
+
+  function handleSendGesture(gesture) {
+    if (!room) return;
+    socket.emit("player-gesture", { code: room.code, gesture });
+  }
+
   function handleHostSetPhase(phase, extraPayload = {}) {
     if (!room) return;
     socket.emit("host-set-phase", { code: room.code, phase, ...extraPayload });
@@ -140,8 +174,8 @@ export default function App() {
     socket.emit("vote", { code: room.code, targetId });
   }
 
-  function handleSendMessage(text) {
-    socket.emit("chat-message", { code: room.code, text });
+  function handleSendMessage(text, channel = "public") {
+    socket.emit("chat-message", { code: room.code, text, channel });
   }
 
   function handleHostSetStatus(targetId, status) {
@@ -157,7 +191,7 @@ export default function App() {
   }
 
   return (
-      <div className="app-shell">
+      <div className={`app-shell ${room?.phase === "night" ? "app-shell--night" : ""}`}>
         {!room && <Home onCreate={handleCreate} onJoin={handleJoin} error={error || kickedNotice} />}
 
         {room && (
@@ -168,19 +202,26 @@ export default function App() {
                 localStream={localStream}
                 remoteStreams={remoteStreams}
                 showStatusOverlay={room.phase !== "lobby"}
+                currentSpeakerId={room.currentSpeakerId}
+                phase={room.phase}
+                nightVisibleIds={room.you?.nightVisibleIds}
+                gestures={gestures}
                 mediaError={mediaError}
                 micOn={micOn}
                 camOn={camOn}
+                canTransferHost={room.phase === "lobby" || room.phase === "ended"}
                 onToggleMic={toggleMic}
                 onToggleCam={toggleCam}
+                onSendGesture={room.you?.alive || room.you?.isHost ? handleSendGesture : null}
                 onHostSetStatus={handleHostSetStatus}
                 onHostKick={handleHostKick}
                 onHostMediaControl={handleHostMediaControl}
+                onHostTransferHost={handleTransferHost}
             />
         )}
 
         {room && room.phase === "lobby" && (
-            <Lobby room={room} onStart={handleStart} onLeave={handleLeave} error={error} />
+            <Lobby onSetRoleConfig="{handleSetRoleConfig}" room={room} onStart={handleStart} onLeave={handleLeave} error={error} />
         )}
         {room && room.phase !== "lobby" && (
             <Game

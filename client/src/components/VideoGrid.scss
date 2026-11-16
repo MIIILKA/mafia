@@ -1,45 +1,97 @@
-@use "../styles/variables" as *;
-@use "../styles/mixins" as *;
-
 .video-grid-wrap {
   width: 100%;
-  max-width: 1000px;
-  margin-bottom: 20px;
+  max-width: 1320px;
+  margin: 0 auto 20px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(18, 18, 25, 0.72);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
 }
 
 .video-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
 }
 
 .video-grid-controls {
   display: flex;
-  gap: 10px;
+  align-items: center;
   justify-content: center;
-  margin-top: 12px;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+
+  &__error {
+    font-size: 12px;
+    color: #fc8181;
+    background: rgba(229, 62, 62, 0.15);
+    border: 1px solid rgba(229, 62, 62, 0.35);
+    padding: 5px 12px;
+    border-radius: 8px;
+  }
 
   &__btn {
-    @include button-base;
-    background: $color-surface-light;
-    border: 1px solid $color-border;
-    color: $color-text;
+    padding: 8px 16px;
+    border-radius: 10px;
     font-size: 13px;
-    padding: 8px 14px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #f7fafc;
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    transition: all 0.2s;
 
-    &:hover {
-      border-color: $color-accent;
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: rgba(255, 255, 255, 0.3);
     }
 
     &--off {
-      background: rgba($color-mafia, 0.15);
-      border-color: rgba($color-mafia, 0.5);
-      color: #ff8a80;
+      color: #feb2b2;
+      background: linear-gradient(135deg, rgba(155, 44, 44, 0.55) 0%, rgba(99, 23, 27, 0.7) 100%);
+      border-color: rgba(252, 129, 129, 0.45);
+    }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
     }
   }
 
-  &__error {
-    font-size: 13px;
-    color: $color-text-muted;
+  &__gestures {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-left: 10px;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  &__gesture-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid rgba(246, 173, 85, 0.35);
+    background: rgba(246, 173, 85, 0.1);
+    font-size: 17px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s, background 0.15s;
+
+    &:hover {
+      transform: translateY(-2px) scale(1.08);
+      background: rgba(246, 173, 85, 0.25);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
   }
 }
