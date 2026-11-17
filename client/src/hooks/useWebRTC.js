@@ -5,19 +5,25 @@ import { useEffect, useRef, useState } from "react";
 // і прописати дані у client/.env — див. README, розділ "TURN-сервер".
 const ICE_SERVERS = [
   { urls: "stun:stun.l.google.com:19302" },
+  { urls: "stun:stun1.l.google.com:19302" },
   ...(import.meta.env.VITE_TURN_URL
-    ? [
+      ? [
         {
           urls: import.meta.env.VITE_TURN_URL,
           username: import.meta.env.VITE_TURN_USERNAME,
           credential: import.meta.env.VITE_TURN_CREDENTIAL
         }
       ]
-    : [])
+      : [])
 ];
 
+// Перевірка, чи є ICE-кандидат локальним (щоб Chrome не питав дозвіл Local Network Access)
+function isLocalCandidate(candidateObj) {
+  const cand = candidateObj?.candidate || "";
+  return cand.includes(".local") || cand.includes("typ host");
+}
+
 // Керує локальною камерою і peer-з'єднаннями з усіма іншими гравцями кімнати.
-// Топологія mesh: кожен з'єднується з кожним напряму (добре працює до ~8-10 гравців).
 export function useWebRTC(socket, playerIds, youId, enabled) {
   const [localStream, setLocalStream] = useState(null);
   const [mediaReady, setMediaReady] = useState(false);
@@ -28,10 +34,9 @@ export function useWebRTC(socket, playerIds, youId, enabled) {
 
   const localStreamRef = useRef(null);
   const peersRef = useRef({}); // socketId -> RTCPeerConnection
+  const pendingCandidatesRef = useRef({}); // socketId -> RTCIceCandidateInit[]
 
   // 1. Захопити локальну камеру/мікрофон один раз, коли з'єднання увімкнене.
-  //    Якщо камери немає — пробуємо лише мікрофон, якщо і його немає —
-  //    просто працюємо без медіа (гравець буде видимий як плитка-заглушка).
   useEffect(() => {
     if (!enabled) return;
     let cancelled = false;
@@ -48,9 +53,9 @@ export function useWebRTC(socket, playerIds, youId, enabled) {
         return audioOnly;
       } catch (err) {
         setMediaError(
-          err.name === "NotFoundError"
-            ? "Камеру і мікрофон не знайдено на цьому пристрої"
-            : err.message || "Не вдалось отримати доступ до камери/мікрофона"
+            err.name === "NotFoundError"
+                ? "Камеру і мікрофон не знайдено на цьому пристрої"
+                : err.message || "Не вдалось отримати доступ до камери/мікрофона"
         );
         return null;
       }
@@ -76,6 +81,7 @@ export function useWebRTC(socket, playerIds, youId, enabled) {
       localStreamRef.current = null;
       Object.values(peersRef.current).forEach((pc) => pc.close());
       peersRef.current = {};
+      pendingCandidatesRef.current = {};
     };
   }, [enabled]);
 
@@ -93,12 +99,14 @@ export function useWebRTC(socket, playerIds, youId, enabled) {
     };
 
     pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        socket.emit("webrtc-signal", {
-          to: otherId,
-          data: { type: "candidate", payload: event.candidate }
-        });
-      }
+      if (!event.candidate) return;
+      // Відсікаємо локальні мережеві адреси, щоб Chrome не показував запит доступу до локальної мережі
+      if (isLocalCandidate(event.candidate)) return;
+
+      socket.emit("webrtc-signal", {
+        to: otherId,
+        data: { type: "candidate", payload: event.candidate }
+      });
     };
 
     pc.onconnectionstatechange = () => {
@@ -131,8 +139,6 @@ export function useWebRTC(socket, playerIds, youId, enabled) {
   }
 
   // 2. Синхронізувати peer-з'єднання зі списком гравців у кімнаті.
-  //    mediaReady (а не localStream) — щоб гравець без камери/мікрофона
-  //    все одно міг приєднатись до дзвінка і приймати чужі потоки.
   useEffect(() => {
     if (!enabled || !mediaReady || !youId) return;
 
@@ -140,7 +146,6 @@ export function useWebRTC(socket, playerIds, youId, enabled) {
 
     others.forEach((otherId) => {
       if (!peersRef.current[otherId]) {
-        // Щоб уникнути подвійного offer, ініціює той, чий id менший лексикографічно.
         const isInitiator = youId < otherId;
         createPeerConnection(otherId, isInitiator);
       }
@@ -150,6 +155,7 @@ export function useWebRTC(socket, playerIds, youId, enabled) {
       if (!others.includes(id)) {
         peersRef.current[id].close();
         delete peersRef.current[id];
+        delete pendingCandidatesRef.current[id];
         setRemoteStreams((prev) => {
           const next = { ...prev };
           delete next[id];
@@ -164,6 +170,19 @@ export function useWebRTC(socket, playerIds, youId, enabled) {
   useEffect(() => {
     if (!enabled) return;
 
+    async function flushPendingCandidates(from, pc) {
+      const queue = pendingCandidatesRef.current[from];
+      if (!queue?.length) return;
+      delete pendingCandidatesRef.current[from];
+      for (const cand of queue) {
+        try {
+          await pc.addIceCandidate(new RTCIceCandidate(cand));
+        } catch {
+          // ігноруємо невалідний кандидат
+        }
+      }
+    }
+
     async function handleSignal({ from, data }) {
       let pc = peersRef.current[from];
       if (!pc) {
@@ -173,13 +192,21 @@ export function useWebRTC(socket, playerIds, youId, enabled) {
       try {
         if (data.type === "offer") {
           await pc.setRemoteDescription(new RTCSessionDescription(data.payload));
+          await flushPendingCandidates(from, pc);
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
           socket.emit("webrtc-signal", { to: from, data: { type: "answer", payload: answer } });
         } else if (data.type === "answer") {
           await pc.setRemoteDescription(new RTCSessionDescription(data.payload));
+          await flushPendingCandidates(from, pc);
         } else if (data.type === "candidate") {
-          await pc.addIceCandidate(new RTCIceCandidate(data.payload));
+          if (isLocalCandidate(data.payload)) return;
+          if (!pc.remoteDescription) {
+            pendingCandidatesRef.current[from] = pendingCandidatesRef.current[from] || [];
+            pendingCandidatesRef.current[from].push(data.payload);
+          } else {
+            await pc.addIceCandidate(new RTCIceCandidate(data.payload));
+          }
         }
       } catch {
         // ігноруємо помилки негоціації, що виникають при паралельних offer'ах
@@ -207,8 +234,6 @@ export function useWebRTC(socket, playerIds, youId, enabled) {
     }
   }
 
-  // Примусове вимкнення від ведучого (гравець не може сам увімкнути назад,
-  // поки ведучий знову не дозволить).
   function forceMuteMic() {
     const track = localStreamRef.current?.getAudioTracks()[0];
     if (track) track.enabled = false;
