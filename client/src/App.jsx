@@ -54,10 +54,6 @@ export default function App() {
       setDonResult(result);
       setTimeout(() => setDonResult(null), 8000);
     }
-    function handleSetRoleConfig(config) {
-      if (!room) return;
-      socket.emit("host-set-role-config", { code: room.code, config });
-    }
     function handleKicked() {
       setRoom(null);
       setMessages([]);
@@ -149,6 +145,11 @@ export default function App() {
     });
   }
 
+  function handleSetRoleConfig(config) {
+    if (!room) return;
+    socket.emit("host-set-role-config", { code: room.code, config });
+  }
+
   function handleTransferHost(targetId) {
     if (!room) return;
     socket.emit("host-transfer-host", { code: room.code, targetId }, (res) => {
@@ -221,7 +222,13 @@ export default function App() {
         )}
 
         {room && room.phase === "lobby" && (
-            <Lobby onSetRoleConfig="{handleSetRoleConfig}" room={room} onStart={handleStart} onLeave={handleLeave} error={error} />
+            <Lobby
+                onSetRoleConfig={handleSetRoleConfig}
+                room={room}
+                onStart={handleStart}
+                onLeave={handleLeave}
+                error={error}
+            />
         )}
         {room && room.phase !== "lobby" && (
             <Game
