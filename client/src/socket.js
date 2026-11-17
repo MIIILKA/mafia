@@ -8,3 +8,4 @@ export const socket = io(SERVER_URL, {
   reconnectionDelayMax: 10000,
   timeout: 20000
 });
+
