@@ -76,14 +76,12 @@ io.on("connection", (socket) => {
     }
   });
 
-  // 🎙 Передати слово наступному (гравець або ведучий)
   socket.on("pass-speech", ({ code }, cb) => {
     try {
       const cleanCode = code ? code.toUpperCase() : "";
       const room = game.getRoom(cleanCode);
       if (!room) throw new Error("Кімнати не існує");
 
-      // Слово може передати або поточний спікер, або ведучий
       if (socket.id === room.currentSpeakerId || socket.id === room.hostId) {
         game.advanceSpeech(room);
       }
@@ -93,7 +91,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // ⏩ Пропустити голосування (ведучий)
   socket.on("skip-voting", ({ code }, cb) => {
     try {
       const cleanCode = code ? code.toUpperCase() : "";
@@ -155,7 +152,7 @@ io.on("connection", (socket) => {
       cb?.({ ok: false, error: err.message });
     }
   });
-// У місці, де підключені сокет-події:
+
   socket.on("host-pause-timer", ({ code }) => {
     const cleanCode = code ? code.toUpperCase() : "";
     const room = game.getRoom(cleanCode);
@@ -173,18 +170,7 @@ io.on("connection", (socket) => {
     const room = game.getRoom(cleanCode);
     if (room) game.addDiscussionTime(room, socket.id, seconds || 30);
   });
-  socket.on("host-reset-lobby", ({ code }, cb) => {
-    try {
-      const cleanCode = code ? code.toUpperCase() : "";
-      const room = game.getRoom(cleanCode);
-      if (!room) throw new Error("Кімнати не існує");
-      game.resetToLobby(room, socket.id);
-      cb?.({ ok: true });
-    } catch (err) {
-      cb?.({ ok: false, error: err.message });
-    }
-  });
-// Заміни існуючий chat-message на цей:
+
   socket.on("chat-message", ({ code, text, channel }) => {
     const cleanCode = code ? code.toUpperCase() : "";
     const room = game.getRoom(cleanCode);
@@ -192,7 +178,6 @@ io.on("connection", (socket) => {
     game.addChatMessage(room, socket.id, text, channel || "public");
   });
 
-  // Виставлення кандидатури на голосування
   socket.on("nominate-player", ({ code, targetId }, cb) => {
     try {
       const cleanCode = code ? code.toUpperCase() : "";
@@ -205,7 +190,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Жести гравців на відео-картках (бачать усі в кімнаті)
   socket.on("player-gesture", ({ code, gesture }) => {
     const cleanCode = code ? code.toUpperCase() : "";
     const room = game.getRoom(cleanCode);
@@ -213,7 +197,6 @@ io.on("connection", (socket) => {
     io.to(room.code).emit("player-gesture", { playerId: socket.id, gesture });
   });
 
-  // Повернення в лобі для нової гри
   socket.on("host-reset-lobby", ({ code }, cb) => {
     try {
       const cleanCode = code ? code.toUpperCase() : "";
@@ -226,7 +209,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Передача ролі ведучого
   socket.on("host-transfer-host", ({ code, targetId }, cb) => {
     try {
       const cleanCode = code ? code.toUpperCase() : "";
@@ -238,17 +220,7 @@ io.on("connection", (socket) => {
       cb?.({ ok: false, error: err.message });
     }
   });
-  socket.on("host-transfer-host", ({ code, targetId }, cb) => {
-    try {
-      const cleanCode = code ? code.toUpperCase() : "";
-      const room = game.getRoom(cleanCode);
-      if (!room) throw new Error("Кімнати не існує");
-      game.transferHost(room, socket.id, targetId);
-      cb?.({ ok: true });
-    } catch (err) {
-      cb?.({ ok: false, error: err.message });
-    }
-  });
+
   socket.on("host-set-status", ({ code, targetId, status }, cb) => {
     try {
       const cleanCode = code ? code.toUpperCase() : "";
